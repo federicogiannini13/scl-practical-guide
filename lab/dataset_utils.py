@@ -123,3 +123,15 @@ def make_exp_sml_test(root, dataset, df):
         df_conf = build_conf_df_sml(root, dataset, df, experiences, count + 1, "test")
         dfs.append(df_conf)
     return dfs
+
+def check_distr(exps):
+    check_ok = True
+    for i, e in enumerate(exps):
+        for task in range(1, 6):
+            df_task = e[e["task"] == task]
+            vc = df_task["target"].value_counts()
+            if (len(vc) != 2):
+                print(f"CONF {i + 1}, TASK: {task}")
+                check_ok = False
+    if check_ok:
+        print("OK")

@@ -2,8 +2,8 @@ from utils.cl_utils.cl_utils import return_components, create_strategy, run_stra
 from utils.utils import update_perf
 
 DATASETS = [
-    f"fashion_mnist_red50_incremental_{c}conf"
-    for c in range(1,6)
+    f"fashion_mnist_red50_sml_{c}conf"
+    for c in range(1,11)
 ]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
@@ -24,7 +24,7 @@ import pandas as pd
 
 for DATASET in DATASETS:
     print(DATASET)
-    INPUT_SIZE = 50 if "red50" in DATASETS else 30
+    INPUT_SIZE = 50 if "red50" in DATASET else 30
     experiences = {"train": [], "test": []}
     strategy_kwargs = {
         "mem_size": 500,
