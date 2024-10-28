@@ -2,7 +2,7 @@ from utils.cl_utils.cl_utils import return_components, create_strategy, run_stra
 from utils.utils import update_perf
 
 DATASETS = [
-    f"fashion_mnist_red50_sml_{c}conf"
+    f"mnist_red30_incremental_{c}conf"
     for c in range(1,11)
 ]
 ROOT = (

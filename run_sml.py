@@ -1,5 +1,5 @@
 DATASETS = [
-    f"fashion_mnist_red50_sml_{c}conf"
+    f"mnist_red30_incremental_{c}conf"
     for c in range(1,11)
 ]
 ROOT = "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
