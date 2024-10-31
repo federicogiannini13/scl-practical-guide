@@ -2,16 +2,15 @@ from utils.cl_utils.cl_utils import return_components, create_strategy, run_stra
 from utils.utils import update_perf
 
 DATASETS = [
-    f"fashion_mnist_red50_sml_{c}conf"
+    f"mnist_red30_incremental_{c}conf"
     for c in range(1,11)
 ]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
 )
 MB_SIZE = 10
-SUFFIX = "pnn"
-STRATEGIES = ["naive", "er", "er_lwf", "agem", "lwf", "ewc", "pnn"]
-STRATEGIES = ["naive", "pnn"]
+SUFFIX = ""
+STRATEGIES = ["naive", "er", "er_lwf", "agem", "lwf", "ewc", "mir", "pnn"]
 
 import torch
 from torch.utils.data.dataset import TensorDataset
@@ -24,6 +23,7 @@ from avalanche.benchmarks import benchmark_from_datasets, with_task_labels
 from avalanche.benchmarks.scenarios.online import split_online_stream
 import os
 import pandas as pd
+from utils.utils import ROLLING_WINDOWS
 
 if SUFFIX is not None and SUFFIX != "":
     SUFFIX = "_" + SUFFIX
@@ -91,9 +91,8 @@ for DATASET in DATASETS:
         print(strategy)
 
         components = return_components(strategy, input_size=INPUT_SIZE)
-        perf, perf_values, predictions, cl_table = update_perf(
-            perf, perf_values, predictions, cl_table, strategy
-        )
+        perf, perf_values, predictions, cl_table = update_perf(perf, perf_values, predictions, cl_table, strategy,
+                                                               ROLLING_WINDOWS)
 
         strategy_kwargs["model"] = components["model"]
         cl_strategy = create_strategy(

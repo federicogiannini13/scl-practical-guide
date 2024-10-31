@@ -1,5 +1,7 @@
+from run_cl import ROLLING_WINDOWS
+
 DATASETS = [
-    f"fashion_mnist_red50_incremental_{c}conf"
+    f"mnist_red30_incremental_{c}conf"
     for c in range(1,11)
 ]
 ROOT = "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
@@ -11,9 +13,10 @@ from river import forest, stream
 from river import tree
 from utils.sml_utils import test_cl
 import os
-from utils.utils import return_metrics, make_dir
+from utils.utils import return_metrics, make_dir, return_rolling
+from utils.utils import ROLLING_WINDOWS
 
-if SUFFIX is not None or SUFFIX != "":
+if SUFFIX is not None and SUFFIX != "":
     SUFFIX = "_" + SUFFIX
 for DATASET in DATASETS:
     df = pd.read_csv(os.path.join(ROOT, "datasets", f"{DATASET}_train.csv"), nrows=1)
@@ -49,12 +52,19 @@ for DATASET in DATASETS:
         } for m in models
     }
 
+    for m in models:
+        for window in ROLLING_WINDOWS:
+            perf[m][f"rolling_{window}"] = return_rolling(window)
+
     perf_values = {
         m: {
             "total": {"accuracy": [], "kappa": []},
             "concept": {"accuracy": [], "kappa": []}
         } for m in models
     }
+    for m in models:
+        for window in ROLLING_WINDOWS:
+            perf_values[m][f"rolling_{window}"] = {"accuracy": [], "kappa": []}
     perf_values["drifts"] = []
 
     predictions = {m:[] for m in models}
@@ -97,7 +107,9 @@ for DATASET in DATASETS:
             pred = models[m].predict_one(x)
             pred = 0 if pred is None else pred
             predictions[m].append(pred)
-            for method in ["total", "concept"]:
+            for method in perf[m]:
+                if method == "drifts":
+                    continue
                 for metric in perf[m][method]:
                     perf[m][method][metric].update(y, pred)
                     perf_values[m][method][metric].append(perf[m][method][metric].get())

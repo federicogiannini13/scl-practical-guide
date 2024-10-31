@@ -8,7 +8,7 @@ from avalanche.evaluation.metrics import bwt_metrics, accuracy_metrics
 import pickle
 import os
 import numpy as np
-from avalanche.training.plugins import ReplayPlugin
+from avalanche.training.plugins import ReplayPlugin, MIRPlugin
 from utils.cl_utils.strategies.agem import AGEMPlugin
 from utils.cl_utils.strategies.ewc import EWCPlugin
 from utils.cl_utils.strategies.lwf import LwFPlugin
@@ -103,7 +103,9 @@ def run_strategy(
                 y_hat = np.argmax(model(x.view(1, x.size(0))).detach().numpy())
             predictions[strategy].append(y_hat)
             for metric in ("accuracy", "kappa"):
-                for eval_ in ("total", "concept"):
+                for eval_ in perf[strategy]:
+                    if eval_ == "drifts":
+                        continue
                     perf[strategy][eval_][metric].update(y, y_hat)
                     perf_values[strategy][eval_][metric].append(
                         perf[strategy][eval_][metric].get()
@@ -217,6 +219,15 @@ def create_strategy(
         )
         agem_plugin = AGEMPlugin(**specific_args)
         plugins.append(agem_plugin)
+
+    elif name == "mir":
+        specific_args = extract_kwargs(
+            ["mem_size", "sample_size", "batch_size_mem"], strategy_kwargs
+        )
+        specific_args["subsample"] = "sample_size"
+        del specific_args["sample_size"]
+        mir_plugin = MIRPlugin(**specific_args)
+        plugins.append(mir_plugin)
 
     return SupervisedTemplate(
         model=components["model"],
