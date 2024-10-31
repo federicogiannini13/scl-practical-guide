@@ -1,5 +1,5 @@
 DATASETS = [
-    f"mnist_red30_incremental_{c}conf"
+    f"fashion_mnist_red50_incremental_{c}conf"
     for c in range(1,11)
 ]
 ROOT = "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
@@ -38,6 +38,10 @@ for DATASET in DATASETS:
         )
     }
 
+    freezed_models = {
+        f"{m}_freezed" : [] for m in models
+    }
+
     perf = {
         m: {
             "total": return_metrics(),
@@ -59,7 +63,7 @@ for DATASET in DATASETS:
     cl_table = {
         m: {
             metric: [] for metric in ["accuracy", "kappa"]
-        } for m in models
+        } for m in list(models.keys()) + list(freezed_models.keys())
     }
 
     df_test = pd.read_csv(os.path.join(ROOT, "datasets", f"{DATASET}_test.csv"))
@@ -78,11 +82,14 @@ for DATASET in DATASETS:
     for idx, (x, y) in enumerate(data_stream):
         print(f"{DATASET} Prequential {idx+1}", end="\r")
         if last_task != x["task"]:
+            for m in models:
+                freezed_models[f"{m}_freezed"].append(pickle.loads(pickle.dumps(models[m])))
             print()
             print(f"DRIFT {idx+1}")
             for m in perf:
                 perf[m]["concept"] = return_metrics()
             cl_table = test_cl(cl_table, models, X_test, y_test)
+            cl_table = test_cl(cl_table, freezed_models, X_test, y_test)
             perf_values["drifts"].append(idx)
         last_task = x["task"]
         del x["task"]
@@ -96,7 +103,9 @@ for DATASET in DATASETS:
                     perf_values[m][method][metric].append(perf[m][method][metric].get())
             models[m].learn_one(x, y)
     cl_table = test_cl(cl_table, models, X_test, y_test)
-
+    for m in models:
+        freezed_models[f"{m}_freezed"].append(pickle.loads(pickle.dumps(models[m])))
+    cl_table = test_cl(cl_table, freezed_models, X_test, y_test)
     make_dir(os.path.join(ROOT, "performance", DATASET))
     with open(os.path.join(ROOT, "performance", DATASET, f"performance_sml{SUFFIX}.pkl"), "wb") as f:
         pickle.dump(perf_values, f)
