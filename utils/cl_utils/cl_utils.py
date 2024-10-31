@@ -1,5 +1,5 @@
 from sklearn import metrics as skm
-
+import torch
 from utils.cl_utils.custom_mlp import CustomMLP
 from torch.optim import SGD
 from torch.nn import CrossEntropyLoss
@@ -15,12 +15,18 @@ from utils.cl_utils.strategies.lwf import LwFPlugin
 from avalanche.training.storage_policy import ClassBalancedBuffer
 from avalanche.training.templates import SupervisedTemplate
 from avalanche.training.supervised import Naive
+from avalanche.models import PNN, SimpleMLP
+from avalanche.training.supervised import PNNStrategy
 
 from utils.utils import return_metrics, make_dir
 
 
-def return_components(input_size=30):
-    model = CustomMLP(input_size=input_size)
+def return_components(strategy, input_size=30):
+    if strategy == "pnn":
+        model = PNN(in_features=input_size, hidden_features_per_column=512)
+    else:
+        # model = CustomMLP(input_size=input_size)
+        model = SimpleMLP(num_classes=2, input_size=input_size, hidden_size=512, drop_rate=0)
     optimizer = SGD(model.parameters(), lr=0.001, momentum=0.9)
     criterion = CrossEntropyLoss()
     eval_plugin = EvaluationPlugin(
@@ -48,13 +54,25 @@ def run_strategy(
     perf_values,
     predictions,
     cl_table,
+    suffix = ""
 ):
     last_task = 0
     idx = 0
-    for experience in online_train_stream:
-        for _, _, task in experience.dataset:
-            break
+    models = []
+    if strategy == "naive":
+        cl_table["naive_freezed"] = pickle.loads(pickle.dumps(cl_table["naive"]))
+    for count_exp, experience in enumerate(online_train_stream):
+        classes = []
+        for _, y, task in experience.dataset:
+            classes.append(y)
+        classes = sorted(list(set(classes)))
+        experience.classes_in_this_experience = classes
+        experience.task_labels = [task]
         if last_task != task:
+            if strategy == "naive":
+                models.append(pickle.loads(pickle.dumps(model)))
+                cl_table = test_cl(cl_table, models, "naive_freezed", X_test, y_test)
+            count_exp = 0
             perf_values["drifts"].append(idx)
             cl_table = test_cl(cl_table, model, strategy, X_test, y_test)
             perf[strategy]["concept"] = return_metrics()
@@ -70,8 +88,19 @@ def run_strategy(
             len(experience.dataset),
             end="\r",
         )
-        for x, y, _ in experience.dataset:
-            y_hat = np.argmax(model(x).detach().numpy())
+        for x, y, task in experience.dataset:
+            if strategy == "pnn":
+                if count_exp == 0:
+                    y_hat = 0
+                else:
+                    y_hat = np.argmax(
+                        model(
+                            x.view(1, x.size(0)),
+                            torch.tensor([task])
+                        ).detach().numpy()
+                    )
+            else:
+                y_hat = np.argmax(model(x.view(1, x.size(0))).detach().numpy())
             predictions[strategy].append(y_hat)
             for metric in ("accuracy", "kappa"):
                 for eval_ in ("total", "concept"):
@@ -81,19 +110,22 @@ def run_strategy(
                     )
         cl_strategy.train(experience, eval_streams=[])
         idx += 1
+    if strategy == "naive":
+        models.append(pickle.loads(pickle.dumps(model)))
+        cl_table = test_cl(cl_table, models, "naive_freezed", X_test, y_test)
     cl_table = test_cl(cl_table, model, strategy, X_test, y_test)
 
     make_dir(os.path.join(root, "performance", dataset))
     with open(
-        os.path.join(root, "performance", dataset, f"performance_cl.pkl"), "wb"
+        os.path.join(root, "performance", dataset, f"performance_cl{suffix}.pkl"), "wb"
     ) as f:
         pickle.dump(perf_values, f)
     with open(
-        os.path.join(root, "performance", dataset, f"cl_table_cl.pkl"), "wb"
+        os.path.join(root, "performance", dataset, f"cl_table_cl{suffix}.pkl"), "wb"
     ) as f:
         pickle.dump(cl_table, f)
     with open(
-        os.path.join(root, "performance", dataset, f"predictions_cl.pkl"), "wb"
+        os.path.join(root, "performance", dataset, f"predictions_cl{suffix}.pkl"), "wb"
     ) as f:
         pickle.dump(predictions, f)
 
@@ -131,6 +163,17 @@ def create_strategy(
             train_epochs=1,
             evaluator=components["eval_plugin"],
             eval_mb_size=mb_size,
+        )
+
+    if name == "pnn":
+        return PNNStrategy(
+            model=components["model"],
+            optimizer=components["optimizer"],
+            criterion=components["criterion"],
+            train_mb_size=mb_size,
+            train_epochs=1,
+            eval_mb_size=mb_size,
+            evaluator=components["eval_plugin"]
         )
 
     elif name == "er":
@@ -188,12 +231,20 @@ def create_strategy(
 
 
 def test_cl(cl_table, model, strategy, X_test, y_test):
-    print()
-    print("Test evaluation")
+    if strategy != "naive":
+        print()
+    print(f"Test evaluation {strategy}")
     for metric in ["accuracy", "kappa"]:
         cl_table[strategy][metric].append([])
-    for X_test_task, y_test_task in zip(X_test, y_test):
-        pred = model(X_test_task).detach().numpy().argmax(axis=1)
+    for task, (X_test_task, y_test_task) in enumerate(zip(X_test, y_test)):
+        if strategy == "pnn":
+            task = min(task,len(model.classifier.classifiers)-1)
+            pred = model(X_test_task, torch.tensor([task] * X_test_task.size(0))).detach().numpy().argmax(axis=1)
+        elif type(model) == list:
+            task = min(task, len(model) - 1)
+            pred = model[task](X_test_task).detach().numpy().argmax(axis=1)
+        else:
+            pred = model(X_test_task).detach().numpy().argmax(axis=1)
         cl_table[strategy]["accuracy"][-1].append(skm.accuracy_score(y_test_task, pred))
         cl_table[strategy]["kappa"][-1].append(skm.cohen_kappa_score(y_test_task, pred))
     return cl_table

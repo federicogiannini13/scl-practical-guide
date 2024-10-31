@@ -3,6 +3,7 @@ DATASETS = [
     for c in range(1,11)
 ]
 ROOT = "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
+SUFFIX = ""
 
 import pickle
 import pandas as pd
@@ -12,6 +13,8 @@ from utils.sml_utils import test_cl
 import os
 from utils.utils import return_metrics, make_dir
 
+if SUFFIX is not None or SUFFIX != "":
+    SUFFIX = "_" + SUFFIX
 for DATASET in DATASETS:
     df = pd.read_csv(os.path.join(ROOT, "datasets", f"{DATASET}_train.csv"), nrows=1)
     last_task = df["task"].iloc[0]
@@ -95,7 +98,7 @@ for DATASET in DATASETS:
     cl_table = test_cl(cl_table, models, X_test, y_test)
 
     make_dir(os.path.join(ROOT, "performance", DATASET))
-    with open(os.path.join(ROOT, "performance", DATASET, "performance_sml.pkl"), "wb") as f:
+    with open(os.path.join(ROOT, "performance", DATASET, f"performance_sml{SUFFIX}.pkl"), "wb") as f:
         pickle.dump(perf_values, f)
-    with open(os.path.join(ROOT, "performance", DATASET, "cl_table_sml.pkl"), "wb") as f:
+    with open(os.path.join(ROOT, "performance", DATASET, f"cl_table_sml{SUFFIX}.pkl"), "wb") as f:
         pickle.dump(cl_table, f)

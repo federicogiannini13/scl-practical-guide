@@ -2,13 +2,16 @@ from utils.cl_utils.cl_utils import return_components, create_strategy, run_stra
 from utils.utils import update_perf
 
 DATASETS = [
-    f"mnist_red30_incremental_{c}conf"
+    f"fashion_mnist_red50_sml_{c}conf"
     for c in range(1,11)
 ]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
 )
 MB_SIZE = 10
+SUFFIX = "pnn"
+STRATEGIES = ["naive", "er", "er_lwf", "agem", "lwf", "ewc", "pnn"]
+STRATEGIES = ["naive", "pnn"]
 
 import torch
 from torch.utils.data.dataset import TensorDataset
@@ -22,6 +25,8 @@ from avalanche.benchmarks.scenarios.online import split_online_stream
 import os
 import pandas as pd
 
+if SUFFIX is not None and SUFFIX != "":
+    SUFFIX = "_" + SUFFIX
 for DATASET in DATASETS:
     print(DATASET)
     INPUT_SIZE = 50 if "red50" in DATASET else 30
@@ -82,10 +87,10 @@ for DATASET in DATASETS:
     predictions = {}
     cl_table = {}
 
-    for strategy in ["naive", "er", "er_lwf", "agem", "lwf", "ewc"]:
+    for strategy in STRATEGIES:
         print(strategy)
 
-        components = return_components(input_size=INPUT_SIZE)
+        components = return_components(strategy, input_size=INPUT_SIZE)
         perf, perf_values, predictions, cl_table = update_perf(
             perf, perf_values, predictions, cl_table, strategy
         )
@@ -111,5 +116,6 @@ for DATASET in DATASETS:
             perf_values,
             predictions,
             cl_table,
+            SUFFIX
         )
         print()
