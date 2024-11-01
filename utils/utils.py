@@ -4,13 +4,15 @@ import river.utils as ru
 
 ROLLING_WINDOWS = [100, 500, 1000, 5000]
 
+
 def return_metrics():
     return {"accuracy": metrics.BalancedAccuracy(), "kappa": metrics.CohenKappa()}
 
+
 def return_rolling(window):
     return {
-        "accuracy":ru.Rolling(metrics.BalancedAccuracy(), window_size=window),
-        "kappa":ru.Rolling(metrics.CohenKappa(), window_size=window)
+        "accuracy": ru.Rolling(metrics.BalancedAccuracy(), window_size=window),
+        "kappa": ru.Rolling(metrics.CohenKappa(), window_size=window),
     }
 
 
@@ -33,7 +35,7 @@ def update_perf(perf, perf_values, predictions, cl_table, m, rolling_windows):
         "concept": {"accuracy": [], "kappa": []},
     }
     for window in rolling_windows:
-        perf_values[m][f"rolling_{window}"] =  {"accuracy": [], "kappa": []}
+        perf_values[m][f"rolling_{window}"] = {"accuracy": [], "kappa": []}
     perf_values["drifts"] = []
 
     predictions[m] = []
@@ -41,4 +43,3 @@ def update_perf(perf, perf_values, predictions, cl_table, m, rolling_windows):
     cl_table[m] = {metric: [] for metric in ["accuracy", "kappa"]}
 
     return perf, perf_values, predictions, cl_table
-

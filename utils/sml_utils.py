@@ -1,5 +1,6 @@
 import sklearn.metrics as skm
 
+
 def test_cl(cl_table, models, X_test, y_test):
     for m in models:
         for metric in ["accuracy", "kappa"]:
@@ -9,7 +10,7 @@ def test_cl(cl_table, models, X_test, y_test):
             for x_cl in X_test_task:
                 x_cl = {f"feat{i}": x_cl[i] for i in range(len(x_cl))}
                 if type(models[m]) == list:
-                    task = min(task, len(models[m])-1)
+                    task = min(task, len(models[m]) - 1)
                     y_hat = models[m][task].predict_one(x_cl)
                 else:
                     y_hat = models[m].predict_one(x_cl)

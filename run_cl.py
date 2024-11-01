@@ -1,10 +1,7 @@
 from utils.cl_utils.cl_utils import return_components, create_strategy, run_strategy
 from utils.utils import update_perf
 
-DATASETS = [
-    f"mnist_red30_incremental_{c}conf"
-    for c in range(1,11)
-]
+DATASETS = [f"fashion_mnist_red50_sml_2_{c}conf" for c in range(1, 11)]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
 )
@@ -91,8 +88,9 @@ for DATASET in DATASETS:
         print(strategy)
 
         components = return_components(strategy, input_size=INPUT_SIZE)
-        perf, perf_values, predictions, cl_table = update_perf(perf, perf_values, predictions, cl_table, strategy,
-                                                               ROLLING_WINDOWS)
+        perf, perf_values, predictions, cl_table = update_perf(
+            perf, perf_values, predictions, cl_table, strategy, ROLLING_WINDOWS
+        )
 
         strategy_kwargs["model"] = components["model"]
         cl_strategy = create_strategy(
@@ -115,6 +113,6 @@ for DATASET in DATASETS:
             perf_values,
             predictions,
             cl_table,
-            SUFFIX
+            SUFFIX,
         )
         print()

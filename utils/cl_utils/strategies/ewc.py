@@ -118,9 +118,7 @@ class EWCPlugin(SupervisedPlugin):
         task = 0
         for _, _, task in strategy.experience.dataset:
             break
-        if (
-            self.last_task != task
-        ):
+        if self.last_task != task:
             exp_counter = strategy.clock.train_exp_counter
             importances = self.compute_importances(
                 strategy.model,

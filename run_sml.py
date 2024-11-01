@@ -1,10 +1,7 @@
-from run_cl import ROLLING_WINDOWS
-
-DATASETS = [
-    f"mnist_red30_incremental_{c}conf"
-    for c in range(1,11)
-]
-ROOT = "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
+DATASETS = [f"fashion_mnist_red50_sml_2_{c}conf" for c in range(1, 11)]
+ROOT = (
+    "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
+)
 SUFFIX = ""
 
 import pickle
@@ -28,7 +25,7 @@ for DATASET in DATASETS:
     data_stream = stream.iter_csv(
         os.path.join(ROOT, "datasets", f"{DATASET}_train.csv"),
         converters=converters,
-        target="target"
+        target="target",
     )
 
     models = {
@@ -38,19 +35,12 @@ for DATASET in DATASETS:
             delta=1e-5,
             leaf_prediction="nb",
             nb_threshold=10,
-        )
+        ),
     }
 
-    freezed_models = {
-        f"{m}_freezed" : [] for m in models
-    }
+    freezed_models = {f"{m}_freezed": [] for m in models}
 
-    perf = {
-        m: {
-            "total": return_metrics(),
-            "concept": return_metrics()
-        } for m in models
-    }
+    perf = {m: {"total": return_metrics(), "concept": return_metrics()} for m in models}
 
     for m in models:
         for window in ROLLING_WINDOWS:
@@ -59,21 +49,20 @@ for DATASET in DATASETS:
     perf_values = {
         m: {
             "total": {"accuracy": [], "kappa": []},
-            "concept": {"accuracy": [], "kappa": []}
-        } for m in models
+            "concept": {"accuracy": [], "kappa": []},
+        }
+        for m in models
     }
     for m in models:
         for window in ROLLING_WINDOWS:
             perf_values[m][f"rolling_{window}"] = {"accuracy": [], "kappa": []}
     perf_values["drifts"] = []
 
-    predictions = {m:[] for m in models}
-
+    predictions = {m: [] for m in models}
 
     cl_table = {
-        m: {
-            metric: [] for metric in ["accuracy", "kappa"]
-        } for m in list(models.keys()) + list(freezed_models.keys())
+        m: {metric: [] for metric in ["accuracy", "kappa"]}
+        for m in list(models.keys()) + list(freezed_models.keys())
     }
 
     df_test = pd.read_csv(os.path.join(ROOT, "datasets", f"{DATASET}_test.csv"))
@@ -81,19 +70,19 @@ for DATASET in DATASETS:
     X_test = []
     y_test = []
     for task in df_test["task"].unique():
-        df_task = df_test[df_test["task"]==task]
-        X_test.append(df_task.iloc[:,:-2].values)
+        df_task = df_test[df_test["task"] == task]
+        X_test.append(df_task.iloc[:, :-2].values)
         y_test.append(list(df_task["target"]))
 
-
     df = pd.read_csv(os.path.join(ROOT, "datasets", f"{DATASET}_train.csv"))
-
 
     for idx, (x, y) in enumerate(data_stream):
         print(f"{DATASET} Prequential {idx+1}", end="\r")
         if last_task != x["task"]:
             for m in models:
-                freezed_models[f"{m}_freezed"].append(pickle.loads(pickle.dumps(models[m])))
+                freezed_models[f"{m}_freezed"].append(
+                    pickle.loads(pickle.dumps(models[m]))
+                )
             print()
             print(f"DRIFT {idx+1}")
             for m in perf:
@@ -119,7 +108,11 @@ for DATASET in DATASETS:
         freezed_models[f"{m}_freezed"].append(pickle.loads(pickle.dumps(models[m])))
     cl_table = test_cl(cl_table, freezed_models, X_test, y_test)
     make_dir(os.path.join(ROOT, "performance", DATASET))
-    with open(os.path.join(ROOT, "performance", DATASET, f"performance_sml{SUFFIX}.pkl"), "wb") as f:
+    with open(
+        os.path.join(ROOT, "performance", DATASET, f"performance_sml{SUFFIX}.pkl"), "wb"
+    ) as f:
         pickle.dump(perf_values, f)
-    with open(os.path.join(ROOT, "performance", DATASET, f"cl_table_sml{SUFFIX}.pkl"), "wb") as f:
+    with open(
+        os.path.join(ROOT, "performance", DATASET, f"cl_table_sml{SUFFIX}.pkl"), "wb"
+    ) as f:
         pickle.dump(cl_table, f)

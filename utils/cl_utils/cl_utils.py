@@ -26,7 +26,9 @@ def return_components(strategy, input_size=30):
         model = PNN(in_features=input_size, hidden_features_per_column=512)
     else:
         # model = CustomMLP(input_size=input_size)
-        model = SimpleMLP(num_classes=2, input_size=input_size, hidden_size=512, drop_rate=0)
+        model = SimpleMLP(
+            num_classes=2, input_size=input_size, hidden_size=512, drop_rate=0
+        )
     optimizer = SGD(model.parameters(), lr=0.001, momentum=0.9)
     criterion = CrossEntropyLoss()
     eval_plugin = EvaluationPlugin(
@@ -54,7 +56,7 @@ def run_strategy(
     perf_values,
     predictions,
     cl_table,
-    suffix = ""
+    suffix="",
 ):
     last_task = 0
     idx = 0
@@ -94,10 +96,9 @@ def run_strategy(
                     y_hat = 0
                 else:
                     y_hat = np.argmax(
-                        model(
-                            x.view(1, x.size(0)),
-                            torch.tensor([task])
-                        ).detach().numpy()
+                        model(x.view(1, x.size(0)), torch.tensor([task]))
+                        .detach()
+                        .numpy()
                     )
             else:
                 y_hat = np.argmax(model(x.view(1, x.size(0))).detach().numpy())
@@ -175,7 +176,7 @@ def create_strategy(
             train_mb_size=mb_size,
             train_epochs=1,
             eval_mb_size=mb_size,
-            evaluator=components["eval_plugin"]
+            evaluator=components["eval_plugin"],
         )
 
     elif name == "er":
@@ -224,7 +225,7 @@ def create_strategy(
         specific_args = extract_kwargs(
             ["mem_size", "sample_size", "batch_size_mem"], strategy_kwargs
         )
-        specific_args["subsample"] = "sample_size"
+        specific_args["subsample"] = specific_args["sample_size"]
         del specific_args["sample_size"]
         mir_plugin = MIRPlugin(**specific_args)
         plugins.append(mir_plugin)
@@ -249,8 +250,13 @@ def test_cl(cl_table, model, strategy, X_test, y_test):
         cl_table[strategy][metric].append([])
     for task, (X_test_task, y_test_task) in enumerate(zip(X_test, y_test)):
         if strategy == "pnn":
-            task = min(task,len(model.classifier.classifiers)-1)
-            pred = model(X_test_task, torch.tensor([task] * X_test_task.size(0))).detach().numpy().argmax(axis=1)
+            task = min(task, len(model.classifier.classifiers) - 1)
+            pred = (
+                model(X_test_task, torch.tensor([task] * X_test_task.size(0)))
+                .detach()
+                .numpy()
+                .argmax(axis=1)
+            )
         elif type(model) == list:
             task = min(task, len(model) - 1)
             pred = model[task](X_test_task).detach().numpy().argmax(axis=1)
