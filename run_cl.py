@@ -1,7 +1,7 @@
 from utils.cl_utils.cl_utils import return_components, create_strategy, run_strategy
 from utils.utils import update_perf
 
-DATASETS = [f"fashion_mnist_red50_sml_2_{c}conf" for c in range(1, 11)]
+DATASETS = [f"mnist_red30_sml_2_{c}conf" for c in range(1, 11)]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
 )

@@ -89,19 +89,27 @@ def build_conf_df_sml(
     conf_number,
     train="train",
     n_split=5,
-    ranges=None,
+    tasks_perc=None,
     suffix="",
 ):
-    if ranges is not None:
-        n_split = len(ranges)
+    if tasks_perc is not None:
+        n_split = len(tasks_perc)
     dfs = [[] for _ in range(n_split)]
     for target in df["target"].unique():
         df_target = df[df["target"] == target].sample(frac=1)
-        if ranges is None:
+        if tasks_perc is None:
             len_split = len(df_target) // n_split
             ranges = [
                 (i * len_split, (i + 1) * len_split) for i in range(n_split - 1)
             ] + [((n_split - 1) * len_split, len(df_target))]
+        else:
+            ranges = [0] + [int(p*len(df_target)) for p in tasks_perc[:-1]]
+            ranges = [ranges[i]+ranges[i+1] for i in range(len(ranges)-1)]
+            ranges = (
+                    [(0, ranges[0])] +
+                    [(ranges[i], ranges[i+1]) for i in range(len(ranges)-1)] +
+                      [(ranges[-1], len(df_target))]
+            )
         for i, (start, end) in enumerate(ranges):
             dfs[i].append(df_target.iloc[start:end, :].reset_index(drop=True))
 
@@ -121,7 +129,7 @@ def build_conf_df_sml(
     return final_df
 
 
-def make_exp_sml_train(root, dataset, df, nconfs=10, n_split=5, ranges=None, suffix=""):
+def make_exp_sml_train(root, dataset, df, nconfs=10, n_split=5, tasks_perc=None, suffix=""):
     try:
         with open(
             os.path.join(root, "datasets", f"{dataset}_sml{suffix}_confs.pkl"), "rb"
@@ -132,8 +140,8 @@ def make_exp_sml_train(root, dataset, df, nconfs=10, n_split=5, ranges=None, suf
     count_conf = 0
 
     final_dfs = []
-    if ranges is not None:
-        n_split = len(ranges)
+    if tasks_perc is not None:
+        n_split = len(tasks_perc)
     while count_conf < nconfs:
         conf = get_conf_perm()
         print(conf[:n_split], end=" ")
@@ -152,7 +160,7 @@ def make_exp_sml_train(root, dataset, df, nconfs=10, n_split=5, ranges=None, suf
                 len(confs),
                 "train",
                 n_split=n_split,
-                ranges=ranges,
+                tasks_perc=tasks_perc,
                 suffix=suffix,
             )
         )
