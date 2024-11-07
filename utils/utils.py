@@ -29,7 +29,7 @@ def update_perf(perf, perf_values, predictions, cl_table, m, rolling_windows):
     }
     for window in rolling_windows:
         perf[m][f"rolling_{window}"] = return_rolling(window)
-        perf[m][f"rolling_{window}_reset"] = return_rolling(window)
+        perf[m][f"rolling_reset_{window}"] = return_rolling(window)
 
     perf_values[m] = {
         "total": {"accuracy": [], "kappa": []},
@@ -37,6 +37,7 @@ def update_perf(perf, perf_values, predictions, cl_table, m, rolling_windows):
     }
     for window in rolling_windows:
         perf_values[m][f"rolling_{window}"] = {"accuracy": [], "kappa": []}
+        perf_values[m][f"rolling_reset_{window}"] = {"accuracy": [], "kappa": []}
     perf_values["drifts"] = []
 
     predictions[m] = []
