@@ -18,7 +18,7 @@ from avalanche.training.supervised import Naive
 from avalanche.models import PNN, SimpleMLP
 from avalanche.training.supervised import PNNStrategy
 
-from utils.utils import return_metrics, make_dir
+from utils.utils import return_metrics, make_dir, return_rolling
 
 
 def return_components(strategy, input_size=30):
@@ -57,6 +57,7 @@ def run_strategy(
     predictions,
     cl_table,
     suffix="",
+    rolling_windows = ()
 ):
     last_task = 0
     idx = 0
@@ -78,6 +79,8 @@ def run_strategy(
             perf_values["drifts"].append(idx)
             cl_table = test_cl(cl_table, model, strategy, X_test, y_test)
             perf[strategy]["concept"] = return_metrics()
+            for window in rolling_windows:
+                perf[strategy][f"rolling_reset_{window}"] = return_rolling(window)
         last_task = task
         print(
             dataset,

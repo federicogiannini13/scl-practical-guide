@@ -1,4 +1,4 @@
-DATASETS = [f"fashion_mnist_red50_sml_2_{c}conf" for c in range(1, 11)]
+DATASETS = [f"mnist_red30_sml_3_{c}conf" for c in range(1, 11)]
 ROOT = (
     "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
 )
@@ -45,7 +45,7 @@ for DATASET in DATASETS:
     for m in models:
         for window in ROLLING_WINDOWS:
             perf[m][f"rolling_{window}"] = return_rolling(window)
-
+            perf[m][f"rolling_reset_{window}"] = return_rolling(window)
     perf_values = {
         m: {
             "total": {"accuracy": [], "kappa": []},
@@ -56,6 +56,7 @@ for DATASET in DATASETS:
     for m in models:
         for window in ROLLING_WINDOWS:
             perf_values[m][f"rolling_{window}"] = {"accuracy": [], "kappa": []}
+            perf_values[m][f"rolling_reset_{window}"] = {"accuracy": [], "kappa": []}
     perf_values["drifts"] = []
 
     predictions = {m: [] for m in models}
@@ -87,6 +88,9 @@ for DATASET in DATASETS:
             print(f"DRIFT {idx+1}")
             for m in perf:
                 perf[m]["concept"] = return_metrics()
+                for window in ROLLING_WINDOWS:
+                    perf[m][f"rolling_{window}"] = return_rolling(window)
+                    perf[m][f"rolling_reset_{window}"] = return_rolling(window)
             cl_table = test_cl(cl_table, models, X_test, y_test)
             cl_table = test_cl(cl_table, freezed_models, X_test, y_test)
             perf_values["drifts"].append(idx)
@@ -116,3 +120,8 @@ for DATASET in DATASETS:
         os.path.join(ROOT, "performance", DATASET, f"cl_table_sml{SUFFIX}.pkl"), "wb"
     ) as f:
         pickle.dump(cl_table, f)
+    with open(
+        os.path.join(ROOT, "performance", DATASET, f"predictions_sml{SUFFIX}.pkl"), "wb"
+    ) as f:
+        pickle.dump(predictions, f)
+

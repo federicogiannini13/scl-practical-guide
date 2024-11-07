@@ -114,5 +114,6 @@ for DATASET in DATASETS:
             predictions,
             cl_table,
             SUFFIX,
+            ROLLING_WINDOWS
         )
         print()
