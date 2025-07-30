@@ -4,6 +4,9 @@ This code aims to compare Streaming Machine Learning (SML) and Online Continual 
 
 Both scenarios refer to the Domain Incremental Learning setting with five experiences, each including the same two binary labels 0 and 1. 
 
+# Requirements
+`requirements.txt` contains the package to be installed with Python 3.10.12
+
 # **Datasets**  
 The `datasets` folder contains csv files whose names follow the following structure: `<dataset>_<umap_dim>red_<scenario>_<conf_id>conf_<train/test>.csv`.
 
