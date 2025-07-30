@@ -3,7 +3,7 @@ from utils.utils import update_perf
 
 DATASETS = [f"fashion_mnist_red50_sml_{c}conf" for c in range(7, 8)]
 ROOT = (
-    "/Users/federicogiannini/Library/CloudStorage/OneDrive-PolitecnicodiMilano/SML_CL"
+    ""
 )
 MB_SIZE = 10
 SUFFIX = ""
@@ -33,7 +33,7 @@ for DATASET in DATASETS:
         "sample_size": 200,
         "alpha": 1,
         "temperature": 2,
-        "batch_size_mem": 10,
+        "batch_size_mem": MB_SIZE,
         "freeze_remaining_model": True,
     }
 
