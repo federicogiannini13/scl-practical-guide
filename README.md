@@ -1,4 +1,8 @@
-This code aims to compare Streaming Machine Learning (SML) and Online Continual Learning (OCL) solutions in two different scenarios:
+# A Practical Guide to Streaming Continual Learning - Motivating Example
+
+This repository contains the official code for the motivating example presented in the paper **"A Practical Guide to Streaming Continual Learning"** published in *Neurocomputing* (2026).
+
+The code reproduces the experiments discussed in Section 6 of the paper. It compares Streaming Machine Learning (SML) and Online Continual Learning (OCL) solutions in two different scenarios:
 - **Virtual drifts scenario** involves only virtual drifts, each introducing a new feature subspace that extends the decision boundary. The previously observed concepts are assumed to remain valid.
 - **Real drift scenario** all the concepts share the same input distribution. Each drift introduces a new classification problem which may invalidate the previous.
 
@@ -63,3 +67,20 @@ To assess forgetting, for each model's checkpoint, we compute the metrics on all
 
 "Naive_freezed", "ARF_freezed", and "HAT_freezed" represent strategies that, when tested on task i, select the checkpoint of the model trained after task i. 
 
+## Citation
+If you use this code or find our work helpful in your research, please cite our paper:
+
+**Plain Text:**
+> Andrea Cossu, Federico Giannini, Giacomo Ziffer, Alessio Bernardo, Alexander Gepperth, Emanuele Della Valle, Barbara Hammer, Davide Bacciu: A practical guide to streaming continual learning. Neurocomputing 674: 132951 (2026)
+
+**BibTeX:**
+```bibtex
+@article{cossu2026practical,
+  title={A practical guide to streaming continual learning},
+  author={Cossu, Andrea and Giannini, Federico and Ziffer, Giacomo and Bernardo, Alessio and Gepperth, Alexander and Della Valle, Emanuele and Hammer, Barbara and Bacciu, Davide},
+  journal={Neurocomputing},
+  volume={674},
+  pages={132951},
+  year={2026},
+  publisher={Elsevier}
+}
