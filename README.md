@@ -75,12 +75,18 @@ If you use this code or find our work helpful in your research, please cite our 
 
 **BibTeX:**
 ```bibtex
-@article{cossu2026practical,
-  title={A practical guide to streaming continual learning},
-  author={Cossu, Andrea and Giannini, Federico and Ziffer, Giacomo and Bernardo, Alessio and Gepperth, Alexander and Della Valle, Emanuele and Hammer, Barbara and Bacciu, Davide},
-  journal={Neurocomputing},
-  volume={674},
-  pages={132951},
-  year={2026},
-  publisher={Elsevier}
+@article{cossu_scl_2026,
+  author       = {Andrea Cossu and
+                  Federico Giannini and
+                  Giacomo Ziffer and
+                  Alessio Bernardo and
+                  Alexander Gepperth and
+                  Emanuele Della Valle and
+                  Barbara Hammer and
+                  Davide Bacciu},
+  title        = {A practical guide to streaming continual learning},
+  journal      = {Neurocomputing},
+  volume       = {674},
+  pages        = {132951},
+  year         = {2026}
 }
